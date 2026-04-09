@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react'
 import {
+  cartLinesToPixOrderLines,
+  loadCartLinesFromLocalStorage,
+} from '../../lib/cartStorage'
+import {
   CHECKOUT_PIX_SESSION_KEY,
+  DEFAULT_CHECKOUT_ORDER_LINES,
+  type CheckoutPixOrderLine,
   type CheckoutPixSession,
 } from '../../lib/checkoutPixSession'
 import { supabase } from '../../lib/supabase'
@@ -20,6 +26,48 @@ function parseAmount(totalFinal: unknown): number {
     return totalFinal
   }
   return Number(String(totalFinal ?? '').replace(',', '.')) || 0
+}
+
+function parseQty(o: Record<string, unknown>): number | undefined {
+  if (typeof o.qty === 'number' && Number.isFinite(o.qty) && o.qty > 0) {
+    return Math.floor(o.qty)
+  }
+  if (typeof o.qty === 'string') {
+    const n = parseInt(o.qty.replace(/\D/g, ''), 10)
+    if (n > 0) return n
+  }
+  return undefined
+}
+
+/** Linhas enviadas pelo iframe 222.html (resumo estático no HTML). */
+function parseIframeOrderLines(
+  p: Record<string, unknown>,
+): CheckoutPixOrderLine[] | undefined {
+  const raw = p.order_lines
+  if (!Array.isArray(raw)) return undefined
+  const out: CheckoutPixOrderLine[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const name = typeof o.name === 'string' ? o.name.trim() : ''
+    if (!name) continue
+    const qty = parseQty(o)
+    const subtitle =
+      typeof o.subtitle === 'string' && o.subtitle.trim()
+        ? o.subtitle.trim()
+        : undefined
+    out.push({ name, qty, subtitle })
+  }
+  return out.length ? out : undefined
+}
+
+/** Prioridade: carrinho real (`localStorage` da loja) → iframe → catálogo fixo do 222. */
+function resolvePixOrderLines(p: Record<string, unknown>): CheckoutPixOrderLine[] {
+  const fromCart = cartLinesToPixOrderLines(loadCartLinesFromLocalStorage())
+  if (fromCart.length > 0) return fromCart
+  const fromIframe = parseIframeOrderLines(p)
+  if (fromIframe?.length) return fromIframe
+  return DEFAULT_CHECKOUT_ORDER_LINES.slice()
 }
 
 function buildUsersAndCaedRow(
@@ -190,11 +238,18 @@ export function CheckoutPage() {
           }
         }
 
+        const orderDisplayId = `#ACB${Date.now()}${Math.floor(Math.random() * 900 + 100)}`
+        const PIX_PAY_DEADLINE_MS = 10 * 60 * 1000
+        const expiresAt = Date.now() + PIX_PAY_DEADLINE_MS
         const session: CheckoutPixSession = {
           qrCode,
           identifier: String(tx.identifier ?? ''),
           status: String(tx.status ?? ''),
           amount,
+          orderDisplayId,
+          expiresAt,
+          customerName: customer.name,
+          orderLines: resolvePixOrderLines(p),
         }
         sessionStorage.setItem(CHECKOUT_PIX_SESSION_KEY, JSON.stringify(session))
         window.location.assign(`${window.location.origin}/checkout/pix`)

@@ -1875,6 +1875,20 @@
       const FREIGHT_FAST_ON = true;
       const SUBTOTAL_VAL = 112.8;
 
+      /** Espelha os .ck-item do resumo; usado se o DOM não for lido a tempo. */
+      var CHECKOUT_STATIC_ORDER_LINES = [
+        {
+          name: "Cesta Mini Romântica com Caneca, Chocolates e Buquê",
+          qty: 1,
+          subtitle: "R$ 42,90",
+        },
+        {
+          name: "Cesta Café da Manhã Light",
+          qty: 1,
+          subtitle: "R$ 69,90",
+        },
+      ];
+
       let selPayment = null;
       let selFreightType = FREIGHT_SLOW_ON ? "slow" : "fast";
       let ckData = {};
@@ -1897,6 +1911,55 @@
             "*",
           );
         } catch (e) {}
+      }
+
+      /** Itens visíveis no resumo (#sum-body .ck-item) para o app pai (PIX / pedido). */
+      function collectOrderLinesFromDom() {
+        var lines = [];
+        var body = document.getElementById("sum-body");
+        var rows = body
+          ? body.querySelectorAll(".ck-item")
+          : document.querySelectorAll("#sum-body .ck-item");
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          var col = null;
+          for (var c = row.children.length - 1; c >= 0; c--) {
+            var ch = row.children[c];
+            if (ch && ch.tagName === "DIV") {
+              col = ch;
+              break;
+            }
+          }
+          if (!col) continue;
+          var kids = col.children;
+          var nameEl = kids[0];
+          var name = nameEl ? String(nameEl.textContent || "").trim() : "";
+          if (!name) continue;
+          var qty = 1;
+          if (kids[1]) {
+            var qm = String(kids[1].textContent || "").match(/Qtd:\s*(\d+)/i);
+            if (qm) qty = parseInt(qm[1], 10) || 1;
+          }
+          var priceEl = kids[2];
+          var subtitle = priceEl
+            ? String(priceEl.textContent || "").trim()
+            : "";
+          lines.push({
+            name: name,
+            qty: qty,
+            subtitle: subtitle || undefined,
+          });
+        }
+        if (!lines.length) {
+          lines = CHECKOUT_STATIC_ORDER_LINES.map(function (x) {
+            return {
+              name: x.name,
+              qty: x.qty,
+              subtitle: x.subtitle,
+            };
+          });
+        }
+        return lines;
       }
 
       // ── Summary accordion ──
@@ -2361,6 +2424,7 @@
         sendToApp("checkout_pix_submit", {
           ...ckData,
           payment_method: "pix",
+          order_lines: collectOrderLinesFromDom(),
         });
       }
 

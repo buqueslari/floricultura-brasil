@@ -9,20 +9,18 @@ import {
   type ReactNode,
 } from 'react'
 import { getProductDetail } from '../data/productDetail'
+import {
+  type CartLine,
+  CART_STORAGE_KEY,
+  loadCartLinesFromLocalStorage,
+  saveCartLinesToLocalStorage,
+} from '../lib/cartStorage'
 import { formatBRL } from '../lib/money'
 
-export const MIN_ORDER_VALUE = 40
+export type { CartLine }
+export { CART_STORAGE_KEY }
 
-export type CartLine = {
-  lineId: string
-  productId: number
-  name: string
-  image: string
-  unitPrice: number
-  quantity: number
-  observations?: string
-  complementSummary?: string
-}
+export const MIN_ORDER_VALUE = 40
 
 type StoreCartContextValue = {
   lines: CartLine[]
@@ -46,64 +44,12 @@ type StoreCartContextValue = {
 
 const StoreCartContext = createContext<StoreCartContextValue | null>(null)
 
-export const CART_STORAGE_KEY = 'cesta-royal-cart-v1'
-
-function isCartLine(x: unknown): x is CartLine {
-  if (x === null || typeof x !== 'object') return false
-  const o = x as Record<string, unknown>
-  if (
-    typeof o.lineId !== 'string' ||
-    typeof o.productId !== 'number' ||
-    typeof o.name !== 'string' ||
-    typeof o.image !== 'string' ||
-    typeof o.unitPrice !== 'number' ||
-    typeof o.quantity !== 'number' ||
-    !Number.isFinite(o.unitPrice) ||
-    !Number.isFinite(o.quantity) ||
-    o.quantity < 1
-  ) {
-    return false
-  }
-  if (o.observations !== undefined && typeof o.observations !== 'string') {
-    return false
-  }
-  if (
-    o.complementSummary !== undefined &&
-    typeof o.complementSummary !== 'string'
-  ) {
-    return false
-  }
-  return true
-}
-
-function loadCartFromStorage(): CartLine[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(isCartLine)
-  } catch {
-    return []
-  }
-}
-
-function saveCartToStorage(lines: CartLine[]) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines))
-  } catch {
-    /* quota / private mode */
-  }
-}
-
 function newLineId() {
   return globalThis.crypto?.randomUUID?.() ?? `ln-${Date.now()}-${Math.random()}`
 }
 
 export function StoreCartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>(loadCartFromStorage)
+  const [lines, setLines] = useState<CartLine[]>(loadCartLinesFromLocalStorage)
   const [cartOpen, setCartOpen] = useState(false)
   const [productModalId, setProductModalId] = useState<number | null>(null)
 
@@ -120,7 +66,7 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
   const canCheckout = subtotal >= MIN_ORDER_VALUE
 
   useEffect(() => {
-    saveCartToStorage(lines)
+    saveCartLinesToLocalStorage(lines)
   }, [lines])
 
   const addLine = useCallback(
