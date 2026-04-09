@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { risepayCreatePix } from '../server/risepay-pix-core'
+import { risepayCreatePix } from './lib/risepay-pix-core'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')

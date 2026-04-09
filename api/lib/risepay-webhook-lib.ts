@@ -4,7 +4,6 @@ function asRecord(v: unknown): Record<string, unknown> {
     : {}
 }
 
-/** Heurística para status pago na RisePay / gateways BR (ajuste conforme payloads reais). */
 export function isRisepayStatusPaid(statusRaw: string): boolean {
   const s = statusRaw.trim().toLowerCase()
   if (!s) return false
@@ -25,9 +24,6 @@ export type RisepayPostbackResult = {
   statusLabel: string
 }
 
-/**
- * postbackUrl e webhooks podem enviar envelope { object, success } ou o objeto da transação.
- */
 export function parseRisepayPostback(body: unknown): RisepayPostbackResult {
   const b = asRecord(body)
   const layers = [

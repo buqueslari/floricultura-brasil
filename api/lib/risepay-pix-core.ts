@@ -111,7 +111,6 @@ export async function risepayCreatePix(
     }
   }
 
-  // RisePay às vezes responde HTTP 200 com envelope: { success, message, object: { pix, ... } }
   if (raw.success === false) {
     const msg =
       typeof raw.message === 'string' && raw.message.trim()

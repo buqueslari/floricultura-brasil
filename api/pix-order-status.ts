@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getServiceSupabase } from '../server/supabaseService'
+import { getServiceSupabase } from './lib/supabaseService'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json')

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { parseRisepayPostback } from '../server/risepay-webhook-lib'
-import { getServiceSupabase } from '../server/supabaseService'
+import { parseRisepayPostback } from './lib/risepay-webhook-lib'
+import { getServiceSupabase } from './lib/supabaseService'
 
 /**
  * Configure na RisePay o postback / webhook apontando para:

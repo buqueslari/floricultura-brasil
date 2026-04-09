@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv, type Connect, type Plugin, type PreviewServer, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
-// Lógica compartilhada com server/risepay-proxy.mjs (Node)
-import { risepayCreatePix } from './server/risepay-pix-core'
+import { risepayCreatePix } from './api/lib/risepay-pix-core'
 
 function readRequestBody(req: Connect.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
