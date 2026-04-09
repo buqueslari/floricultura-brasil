@@ -80,7 +80,9 @@ function buildNotification(seed: number): NotificationItem {
 }
 
 export function PurchaseNotification() {
-  const { cartOpen, productModalId } = useStoreCart()
+  const { cartOpen, productModalId, itemCount } = useStoreCart()
+  /** Com itens no carrinho o botão flutuante ocupa a base; sem itens desce mais. */
+  const bottomPx = itemCount > 0 ? 90 : 24
   const [current, setCurrent] = useState<NotificationItem | null>(null)
   const [hidden, setHidden] = useState(true)
 
@@ -119,7 +121,7 @@ export function PurchaseNotification() {
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 90,
+        bottom: bottomPx,
         margin: '0 auto',
         maxWidth: 680,
         padding: '0 16px',
