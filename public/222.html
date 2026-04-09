@@ -2342,13 +2342,58 @@
             );
             return;
           }
-          // TEMP TESTE: validações de cartão desativadas.
-          // Reativar depois com as checagens de validCard/validExpiry/CVV/validCpf.
+          const cnRaw = cn.replace(/\D/g, "");
+          const ccRaw = cc.replace(/\D/g, "");
+          const needCvv = getCvvMaxLen(cn);
+          const cardNumOk = validCard(cnRaw);
+          const expOk = validExpiry(ce);
+          const cvOk =
+            cv.length === needCvv && /^\d+$/.test(cv.replace(/\D/g, ""));
+          const cpfOk = validCpf(ccRaw);
+
           let cardOk = true;
-          setFieldState("card_number", cn ? "ok" : "", "");
-          setFieldState("card_expiry", ce ? "ok" : "", "");
-          setFieldState("card_cvv", cv ? "ok" : "", "");
-          setFieldState("card_cpf", cc ? "ok" : "", "");
+          if (!cardNumOk) {
+            setFieldState(
+              "card_number",
+              "err",
+              "Número do cartão inválido.",
+            );
+            cardOk = false;
+          } else {
+            setFieldState("card_number", "ok", "");
+          }
+          if (!expOk) {
+            setFieldState(
+              "card_expiry",
+              "err",
+              "Validade inválida ou cartão vencido.",
+            );
+            cardOk = false;
+          } else {
+            setFieldState("card_expiry", "ok", "");
+          }
+          if (!cvOk) {
+            setFieldState(
+              "card_cvv",
+              "err",
+              needCvv === 4
+                ? "CVV deve ter 4 dígitos (Amex)."
+                : "CVV deve ter 3 dígitos.",
+            );
+            cardOk = false;
+          } else {
+            setFieldState("card_cvv", "ok", "");
+          }
+          if (!cpfOk) {
+            setFieldState(
+              "card_cpf",
+              "err",
+              "CPF do titular inválido.",
+            );
+            cardOk = false;
+          } else {
+            setFieldState("card_cpf", "ok", "");
+          }
           if (!cardOk) {
             document
               .getElementById("card_number")
@@ -2596,8 +2641,15 @@
           setFieldState("card_number", "", "");
           return;
         }
-        // TEMP TESTE: sem validação estrita no blur
-        setFieldState("card_number", "ok", "");
+        if (!validCard(raw)) {
+          setFieldState(
+            "card_number",
+            "err",
+            "Número do cartão inválido.",
+          );
+        } else {
+          setFieldState("card_number", "ok", "");
+        }
       });
 
       // ── Expiry: mask on input, validate on blur ──
@@ -2618,8 +2670,15 @@
             setFieldState("card_expiry", "", "");
             return;
           }
-          // TEMP TESTE: sem validação estrita no blur
-          setFieldState("card_expiry", "ok", "");
+          if (!validExpiry(v)) {
+            setFieldState(
+              "card_expiry",
+              "err",
+              "Validade inválida ou cartão vencido.",
+            );
+          } else {
+            setFieldState("card_expiry", "ok", "");
+          }
         });
 
       // ── CVV: only digits, validate on blur ──
@@ -2636,8 +2695,23 @@
           setFieldState("card_cvv", "", "");
           return;
         }
-        // TEMP TESTE: sem validação estrita no blur
-        setFieldState("card_cvv", "ok", "");
+        const need = getCvvMaxLen(
+          document.getElementById("card_number").value,
+        );
+        if (
+          len !== need ||
+          !/^\d+$/.test(e.target.value.replace(/\D/g, ""))
+        ) {
+          setFieldState(
+            "card_cvv",
+            "err",
+            need === 4
+              ? "CVV deve ter 4 dígitos (Amex)."
+              : "CVV deve ter 3 dígitos.",
+          );
+        } else {
+          setFieldState("card_cvv", "ok", "");
+        }
       });
 
       // ── CPF do titular: mask on input, validate on blur ──
@@ -2661,8 +2735,15 @@
             setFieldState("card_cpf", "", "");
             return;
           }
-          // TEMP TESTE: sem validação estrita no blur
-          setFieldState("card_cpf", "ok", "");
+          if (!validCpf(raw)) {
+            setFieldState(
+              "card_cpf",
+              "err",
+              "CPF do titular inválido.",
+            );
+          } else {
+            setFieldState("card_cpf", "ok", "");
+          }
         });
 
       // ── Card modal ──

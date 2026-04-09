@@ -1,0 +1,246 @@
+/* Modal de localização — espelho do exemplo.html, cor primária da loja */
+
+.location-onboarding {
+  --lon-primary: #eb3434;
+  --lon-primary-mid: #fd3f3f;
+  --lon-shadow: rgba(235, 52, 52, 0.35);
+}
+
+.location-onboarding .lon-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.location-onboarding .lon-card {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 32px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .location-onboarding .lon-card {
+    padding: 28px 20px 24px;
+    border-radius: 20px;
+  }
+}
+
+.location-onboarding .lon-anim {
+  animation: lon-slide-up 0.28s cubic-bezier(0.22, 0.68, 0, 1.2) both;
+}
+
+@keyframes lon-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.location-onboarding .lon-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.location-onboarding .lon-close:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.location-onboarding .lon-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--lon-primary-mid) 0%, var(--lon-primary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin: 0 auto 10px;
+  box-shadow: 0 8px 24px -4px var(--lon-shadow);
+}
+
+.location-onboarding .lon-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.location-onboarding .lon-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.location-onboarding .lon-sub strong {
+  color: #374151;
+}
+
+.location-onboarding .lon-select-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.location-onboarding .lon-select-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.location-onboarding .lon-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 13px 42px 13px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  background: #f9fafb;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.location-onboarding .lon-select:focus {
+  border-color: var(--lon-primary);
+  box-shadow: 0 0 0 3px rgba(235, 52, 52, 0.18);
+  background: #fff;
+}
+
+.location-onboarding .lon-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 20px;
+  background: var(--lon-primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+}
+
+.location-onboarding .lon-btn:hover {
+  opacity: 0.88;
+}
+
+.location-onboarding .lon-btn:active {
+  transform: scale(0.98);
+}
+
+.location-onboarding .lon-btn-back {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.location-onboarding .lon-btn-back:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.location-onboarding .lon-spinner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3.5px solid #f3f4f6;
+  border-top-color: var(--lon-primary);
+  animation: lon-spin 0.75s linear infinite;
+}
+
+@keyframes lon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.location-onboarding .lon-success-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--lon-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 32px -6px var(--lon-shadow);
+  animation: lon-pop 0.4s cubic-bezier(0.22, 0.68, 0, 1.4) both;
+}
+
+@keyframes lon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.location-onboarding .lon-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}

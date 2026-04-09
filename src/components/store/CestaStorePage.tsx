@@ -9,6 +9,7 @@ import {
 } from '../../data/homepageData'
 import { CategoryCarouselSection } from './CategoryCarouselSection'
 import { CartSheet } from './CartSheet'
+import { LocationOnboardingModal } from './LocationOnboardingModal'
 import { FloatingCart } from './FloatingCart'
 import { InlineSearch } from './InlineSearch'
 import { MidBanner } from './MidBanner'
@@ -77,6 +78,7 @@ export function CestaStorePage() {
       <CestaStoreInner />
       <ProductModal />
       <CartSheet />
+      <LocationOnboardingModal />
     </StoreCartProvider>
   )
 }
